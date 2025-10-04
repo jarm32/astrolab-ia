@@ -48,5 +48,6 @@ Built with **HTML, CSS, and JavaScript**, the web interface focuses on accessibi
 
 ---
 
-### 🛰️ *Astrolab-IA — Team Dataverse*
+### 🛰️ *Astrolab-IA — Team DataVerse*
+
 This project uses **open NASA data**.
