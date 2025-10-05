@@ -48,7 +48,7 @@ Built with **HTML, CSS, and JavaScript**, the web interface focuses on accessibi
 
 ---
 
-### 🛰️ *Astrolab-IA — Team DataVerse*
+### *Astrolab-IA — Team DataVerse*
 
 This project uses **open NASA data**. Artificial intelligence was used to generate the website and part of the code.
 
@@ -104,6 +104,6 @@ Construida con **HTML, CSS y JavaScript**, la interfaz web se centra en la acces
 
 ---
 
-### 🛰️ *Astrolab-IA — Equipo DataVerse*
+### *Astrolab-IA — Equipo DataVerse*
 
 Este proyecto utiliza **datos abiertos de la NASA**. Para generar la web y parte del código se ha empleado la inteligencia artificial.
