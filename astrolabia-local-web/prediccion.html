@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ASTROLAB-IA - Demo Predicción</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:radial-gradient(circle at 50% 40%, #030a1a 0%, #000 80%);
+  color:#e9f8ff;font-family:'Orbitron',sans-serif;
+  height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow:hidden;
+}
+a.back{
+  position:fixed;top:22px;left:22px;
+  color:#00ffe5;text-decoration:none;border:1px solid #00ffe5;
+  padding:8px 16px;border-radius:8px;box-shadow:0 0 10px #00ffe5;
+  font-size:14px;transition:all .2s ease;z-index:10;
+}
+a.back:hover{background:#00ffe5;color:#000;box-shadow:0 0 20px #00ffe5;}
+
+#hud{
+  margin-top:30px;font-size:48px;color:#bb8fff;
+  text-shadow:0 0 20px #ff00ff,0 0 40px #00ffe5;
+  animation:glow 3s ease-in-out infinite alternate;text-align:center;
+}
+@keyframes glow{
+  from{text-shadow:0 0 20px #ff00ff,0 0 40px #00ffe5;}
+  to{text-shadow:0 0 10px #00ffe5,0 0 25px #ff00ff;}
+}
+
+#container{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:60px;
+  width:90%;
+  max-width:1400px;
+  margin-top:60px;
+}
+
+/* Panel de formulario */
+#form-panel{
+  background:rgba(0,0,0,0.86);
+  border-radius:14px;
+  padding:28px 32px;
+  box-shadow:0 0 26px #00ffe5;
+  flex:1;
+  max-width:420px;
+}
+#form-panel h3{
+  color:#00ffe5;text-align:center;margin-bottom:20px;
+  text-shadow:0 0 10px #00ffe5;
+}
+label{display:block;margin-top:12px;margin-bottom:4px;font-size:13px;color:#00ffe5;}
+input{
+  width:100%;padding:10px 12px;border-radius:8px;
+  border:1px solid #00ffe5;background:#000;color:#00ffe5;
+  font-weight:700;font-size:14px;
+  box-shadow:inset 0 0 10px #00ffe5;
+}
+button{
+  width:100%;margin-top:20px;padding:12px;border:none;border-radius:10px;
+  background:#00ffe5;color:#000;font-weight:900;font-size:16px;
+  box-shadow:0 0 18px #00ffe5;cursor:pointer;transition:0.2s;
+}
+button:hover{background:#00ffff;box-shadow:0 0 26px #00ffff;}
+
+/* Panel derecho */
+#result-panel{
+  flex:1.5;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+#three-wrap{
+  width:min(340px,42vw);
+  height:min(340px,42vh);
+  border-radius:50%;
+  overflow:hidden;
+  box-shadow:0 0 45px rgba(255,215,0,.35),0 0 25px #00ffe5 inset;
+  background:radial-gradient(circle at 30% 30%, #111 0%, #000 85%);
+  margin-bottom:36px;
+}
+canvas{width:100%;height:100%;display:block;}
+
+#results-row{
+  display:flex;justify-content:center;align-items:flex-start;gap:30px;
+}
+
+.box{
+  background:rgba(0,0,0,0.8);
+  border-radius:12px;padding:16px 24px;
+  box-shadow:0 0 20px #00ffe5;min-width:240px;
+}
+.box h4{text-align:center;margin-bottom:8px;color:#00ffe5;text-shadow:0 0 10px #00ffe5;}
+#earth-box{box-shadow:0 0 20px #ff00ff;}
+#earthSim{font-size:22px;text-align:center;text-shadow:0 0 14px #ff00ff;}
+
+.prob{margin:8px 0;}
+.label2{text-transform:uppercase;font-size:13px;color:#00ffe5;margin-bottom:4px;}
+.bar{width:100%;height:14px;border-radius:10px;background:rgba(255,255,255,0.08);overflow:hidden;position:relative;}
+.bar span{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#00ffff,#ff00ff);display:block;border-radius:10px;}
+</style>
+</head>
+<body>
+<a href="index.html" class="back">← Volver al mapa</a>
+
+<div id="hud">Predicción de Exoplaneta</div>
+
+<div id="container">
+  <div id="form-panel">
+    <h3>Datos del Exoplaneta</h3>
+    <label>Temperatura (K)</label>
+    <input type="text" value="793">
+    <label>Radio (R⊕)</label>
+    <input type="text" value="1.26">
+    <label>Periodo orbital (días)</label>
+    <input type="text" value="52.4">
+    <label>Gravedad superficial</label>
+    <input type="text" value="9.81">
+    <label>Distancia a la estrella (UA)</label>
+    <input type="text" value="0.28">
+    <label>Metallicidad estelar [Fe/H]</label>
+    <input type="text" value="0.03">
+    <label>Magnitud aparente</label>
+    <input type="text" value="12.8">
+    <button>Predecir</button>
+  </div>
+
+  <div id="result-panel">
+    <div id="three-wrap"><canvas id="planetCanvas3D"></canvas></div>
+
+    <div id="results-row">
+      <div id="earth-box" class="box">
+        <h4>Similitud con la Tierra</h4>
+        <div id="earthSim"><b>15.6%</b></div>
+      </div>
+      <div id="probs-box" class="box">
+        <h4>Clasificación</h4>
+        <div class="prob"><div class="label2">Candidato</div><div class="bar"><span style="width:78%"></span></div></div>
+        <div class="prob"><div class="label2">Confirmado</div><div class="bar"><span style="width:15%"></span></div></div>
+        <div class="prob"><div class="label2">Falso Positivo</div><div class="bar"><span style="width:7%"></span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script>
+const canvas=document.getElementById('planetCanvas3D');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(canvas.clientWidth,canvas.clientHeight);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(50,canvas.clientWidth/canvas.clientHeight,0.1,1000);
+camera.position.z=4;
+
+const temp=793, minT=200, maxT=8000;
+const tNorm=(temp-minT)/(maxT-minT);
+const color=new THREE.Color(`rgb(${Math.round(255*tNorm)},${Math.round(80+90*(1-tNorm))},255)`);
+
+const geo=new THREE.SphereGeometry(1.1,64,64);
+const mat=new THREE.MeshStandardMaterial({color,roughness:0.4,metalness:0.2});
+const sphere=new THREE.Mesh(geo,mat);
+scene.add(sphere);
+const light1=new THREE.PointLight(0xffffff,1.2);
+light1.position.set(3,2,3);scene.add(light1);
+scene.add(new THREE.AmbientLight(0x404040,0.8));
+
+function animate(){
+  requestAnimationFrame(animate);
+  sphere.rotation.y+=0.006;
+  const t=performance.now()*0.001;
+  light1.position.x=3+Math.sin(t)*0.8;
+  light1.position.z=3+Math.cos(t)*0.8;
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  renderer.setSize(w,h);
+  camera.aspect=w/h;camera.updateProjectionMatrix();
+});
+</script>
+</body>
+</html>
