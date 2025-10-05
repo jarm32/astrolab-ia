@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>ASTROLAB-IA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+  * { box-sizing: border-box; }
+  :root{
+    --neon-cyan:#00ffe5;
+    --neon-pink:#ff00ff;
+    --bg-dark:#000;
+    --txt:#e9f8ff;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; overflow:hidden; color:var(--txt);
+    background: radial-gradient(circle at 50% 40%, #030a1a 0%, #000 75%);
+    font-family:'Orbitron',sans-serif; line-height:1.35;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+
+  #hud{
+    position:fixed; top:24px; left:50%; transform:translateX(-50%);
+    font-size:56px; font-weight:900; letter-spacing:4px; z-index:6;
+    color:#bb8fff; user-select:none; pointer-events:none;
+    text-shadow:0 0 10px #bb8fff, 0 0 40px var(--neon-pink), 0 0 80px #ff66ff;
+    animation:glow 3s ease-in-out infinite alternate;
+  }
+  @keyframes glow{
+    from { text-shadow:0 0 10px #bb8fff, 0 0 25px var(--neon-pink); }
+    to   { text-shadow:0 0 20px #00ffff, 0 0 45px var(--neon-cyan); }
+  }
+
+  #controls{
+    position:fixed; top:110px; left:24px; z-index:5;
+    width:280px; padding:18px 20px;
+    background:rgba(0,0,0,0.86); border-radius:14px;
+    box-shadow:0 0 26px var(--neon-cyan); backdrop-filter: blur(4px);
+  }
+  #controls label{
+    display:block; margin-bottom:10px; font-size:14px; letter-spacing:.5px;
+    color:var(--neon-cyan); text-shadow:0 0 8px var(--neon-cyan);
+  }
+  #search-box{
+    width:100%; padding:12px 12px; font-weight:800; font-size:14px; letter-spacing:.5px;
+    color:var(--neon-cyan); background:#000; border:1px solid var(--neon-cyan); border-radius:10px;
+    box-shadow:0 0 12px var(--neon-cyan) inset;
+  }
+
+  #menu-btn{
+    position:fixed; top:24px; right:24px; z-index:7;
+    width:44px; height:44px; border:none; border-radius:10px; cursor:pointer;
+    background:var(--neon-cyan); color:#000; font-weight:900; font-size:22px;
+    box-shadow:0 0 25px var(--neon-cyan);
+  }
+  #menu{
+    position:fixed; top:0; right:-330px; z-index:8; width:310px; height:100%;
+    background:rgba(0,0,0,0.965); backdrop-filter: blur(6px);
+    box-shadow:-3px 0 30px var(--neon-cyan);
+    padding:44px 24px; transition:right .38s ease;
+  }
+  #menu.open{ right:0; }
+  #menu h2{
+    margin:0 0 20px; padding-bottom:12px; border-bottom:1px solid var(--neon-cyan);
+    color:var(--neon-cyan); text-shadow:0 0 10px var(--neon-cyan);
+    letter-spacing:.5px;
+  }
+  #menu ul{ margin:0; padding:0; list-style:none; }
+  #menu li{
+    margin:18px 0; font-size:16px; color:var(--neon-pink); cursor:pointer;
+    text-shadow:0 0 10px var(--neon-pink); transition: color .2s ease, text-shadow .2s ease;
+    letter-spacing:.3px;
+  }
+  #menu li:hover{ color:var(--neon-cyan); text-shadow:0 0 10px var(--neon-cyan); }
+  #close-menu{
+    position:absolute; top:14px; right:14px; width:34px; height:34px; cursor:pointer;
+    background:none; color:var(--neon-cyan); border:2px solid var(--neon-cyan); border-radius:50%;
+    font-weight:900; font-size:18px; box-shadow:0 0 10px var(--neon-cyan);
+  }
+
+  #legend{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:5;
+    width:360px; text-align:center; background:rgba(0,0,0,0.86);
+    border-radius:12px; box-shadow:0 0 20px var(--neon-cyan);
+    padding:12px 16px; font-size:13px;
+  }
+  #legend-bar{width:100%; height:15px; border-radius:10px; margin:8px 0;
+    background:linear-gradient(90deg,#00ffff, #ff00ff);}
+  #legend-values{ display:flex; justify-content:space-between; font-size:12px; opacity:.9; }
+
+  #universe{
+    position:fixed; inset:0; display:block; width:100vw; height:100vh; cursor:grab;
+    background: radial-gradient(circle at 50% 40%, #061225 0%, #000 80%);
+  }
+  #universe:active{ cursor:grabbing; }
+
+  #tooltip{
+    position:fixed; z-index:6; display:none; width:320px; max-width:min(320px, 92vw);
+    background:rgba(0,0,0,0.94); border:1px solid var(--neon-cyan); border-radius:12px; padding:0;
+    color:#fff; box-shadow:0 0 24px var(--neon-cyan), 0 0 14px rgba(255,0,255,.35);
+  }
+  .tip-head{ display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.12); font-weight:900; letter-spacing:.4px; }
+  .tip-body{ padding:10px 12px; font-size:13px; }
+  .tip-actions{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid rgba(255,255,255,.12); }
+  .tip-x{ cursor:pointer; color:var(--neon-cyan); font-size:18px; font-weight:900; text-shadow:0 0 8px var(--neon-cyan); }
+
+  .btn{ border:none; border-radius:10px; font-weight:900; cursor:pointer;
+    background:var(--neon-cyan); color:#000; padding:8px 12px; box-shadow:0 0 18px var(--neon-cyan);
+    letter-spacing:.3px; }
+  #zoom-out{ position:fixed; right:24px; bottom:24px; z-index:6; width:52px; height:52px; border-radius:50%; font-size:22px; }
+
+  #stats-panel{
+    position:fixed; inset:0; z-index:9; display:none;
+    background:rgba(0,0,0,0.965); color:#fff; overflow:auto; padding:70px 24px;
+    animation:fadeIn .4s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+  #stats-panel h1{ text-align:center; margin:0 0 24px; letter-spacing:.6px; text-shadow:0 0 20px var(--neon-cyan), 0 0 40px var(--neon-pink); }
+  #close-stats{ position:fixed; top:18px; right:36px; background:none; color:var(--neon-cyan); font-size:32px; cursor:pointer; text-shadow:0 0 15px var(--neon-cyan); }
+  .stats-img{ max-width:46%; border-radius:10px; margin:18px; display:inline-block; box-shadow:0 0 25px var(--neon-cyan); transition:transform .25s ease; }
+  .stats-img:hover{ transform:scale(1.04); }
+  #report{ max-width:900px; margin:0 auto 18px; white-space:pre-wrap; background:rgba(0,0,0,0.82); border-radius:12px; padding:16px; box-shadow:0 0 24px var(--neon-pink); font-size:14px; line-height:1.5; }
+
+  .popup{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(.96);
+    background:rgba(0,0,0,.94); border:2px solid var(--neon-cyan); border-radius:14px;
+    width:480px; max-width:88vw; padding:22px; z-index:10; display:none;
+    box-shadow:0 0 28px var(--neon-cyan); transition:transform .25s ease, opacity .25s ease;
+  }
+  .popup.open{ display:block; transform:translate(-50%,-50%) scale(1); opacity:1; }
+  .popup .x{ position:absolute; top:8px; right:10px; cursor:pointer; color:var(--neon-cyan); font-size:22px; font-weight:900; text-shadow:0 0 10px var(--neon-cyan); }
+  .popup h3{margin:0 0 8px; letter-spacing:.4px}
+
+  #planet3d{ position:fixed; inset:0; z-index:11; display:none; background: radial-gradient( circle at 50% 50%, #010014 0%, #000 80%); }
+  #back-btn{ position:fixed; top:24px; left:24px; }
+  #three-wrap{ position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:min(560px, 52vw); height:min(560px, 68vh); border-radius:50%; overflow:hidden; box-shadow:0 0 45px rgba(255,215,0,.35), 0 0 25px var(--neon-cyan) inset; background: radial-gradient(circle at 30% 30%, #111 0%, #000 80%); }
+  #planetCanvas3D{ width:100%; height:100%; display:block; }
+  #info3d{ position:fixed; top:92px; right:28px; width:360px; max-width:44vw; background:rgba(0,0,0,.88); border-radius:12px; padding:16px 18px; box-shadow:0 0 22px var(--neon-cyan); font-size:14px; }
+  #info3d h3{ margin:0 0 8px; letter-spacing:.5px }
+  #info3d .row{ display:flex; justify-content:space-between; margin:8px 0; opacity:.95; }
+  #info3d .actions{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ===== BOTÓN ABOUT US (AÑADIDO) ===== */
+  #about-btn{
+    position:fixed; bottom:24px; left:24px; z-index:6;
+    background:var(--neon-pink); color:#000; font-weight:900; font-size:15px;
+    border:none; border-radius:12px; cursor:pointer;
+    padding:10px 18px;
+    box-shadow:0 0 25px var(--neon-pink);
+    transition: all 0.25s ease-in-out;
+  }
+  #about-btn:hover{
+    background:var(--neon-cyan); box-shadow:0 0 35px var(--neon-cyan);
+    transform:scale(1.05);
+  }
+</style>
+</head>
+<body>
+  <div id="hud">ASTROLAB-IA</div>
+
+  <div id="controls">
+    <label for="search-box">Buscar exoplaneta (ID exacto):</label>
+    <input id="search-box" type="text" placeholder="Ej: K00753.01">
+  </div>
+
+  <button id="menu-btn">≡</button>
+  <div id="menu">
+    <button id="close-menu">×</button>
+    <h2>Menú Principal</h2>
+    <ul>
+      <li id="open-stats">Estadísticas del modelo</li>
+      <li id="open-form">Probar nuevo candidato</li>
+      <li id="open-top">Top candidatos a explorar</li>
+      <li id="open-top-earth">Top tipo Tierra</li>
+    </ul>
+  </div>
+
+  <canvas id="universe"></canvas>
+  <div id="tooltip"></div>
+  <button id="zoom-out" class="btn">−</button>
+
+  <div id="legend">
+    <div><b>Temperatura (K)</b></div>
+    <div id="legend-bar"></div>
+    <div id="legend-values"><span>200</span><span>8000</span></div>
+  </div>
+
+  <div id="stats-panel">
+    <span id="close-stats">×</span>
+    <h1>Estadísticas del modelo</h1>
+    <div id="report">Cargando reporte...</div>
+    <div style="text-align:center">
+      <img src="assets/model_stats/roc1.jpeg" alt="ROC" class="stats-img">
+      <img src="assets/model_stats/conf1.jpeg" alt="Confusion" class="stats-img">
+    </div>
+  </div>
+
+  <div id="form-popup" class="popup">
+    <span class="x" data-close="#form-popup">×</span>
+    <h3>Probar nuevo candidato</h3>
+    <p style="opacity:.9">Introduce variables. El modelo y la lógica difusa se aplicarán cuando estén conectados.</p>
+    <input type="text" placeholder="Temperatura (K)" style="width:100%;margin:.5rem 0;padding:.7rem;border-radius:10px;border:1px solid var(--neon-cyan);background:#000;color:var(--neon-cyan)">
+    <input type="text" placeholder="Radio" style="width:100%;margin:.5rem 0;padding:.7rem;border-radius:10px;border:1px solid var(--neon-cyan);background:#000;color:var(--neon-cyan)">
+    <input type="text" placeholder="Periodo orbital (días)" style="width:100%;margin:.5rem 0;padding:.7rem;border-radius:10px;border:1px solid var(--neon-cyan);background:#000;color:var(--neon-cyan)">
+    <button class="btn" style="width:100%;margin-top:.6rem">Predecir</button>
+  </div>
+
+  <div id="top-popup" class="popup">
+    <span class="x" data-close="#top-popup">×</span>
+    <h3>Top candidatos (por radio)</h3>
+    <div id="top-list" style="display:grid;gap:10px"></div>
+  </div>
+
+  <div id="top-earth-popup" class="popup">
+    <span class="x" data-close="#top-earth-popup">×</span>
+    <h3>Top tipo Tierra (por earth_similarity)</h3>
+    <div id="top-earth-list" style="display:grid;gap:10px"></div>
+  </div>
+
+  <div id="planet3d" style="display:none">
+    <button id="back-btn" class="btn">← Volver</button>
+    <div id="three-wrap"><canvas id="planetCanvas3D"></canvas></div>
+    <aside id="info3d"></aside>
+  </div>
+
+  <!-- ✅ Botón About Us añadido sin tocar nada más -->
+  <button id="about-btn" onclick="window.location.href='about.html'">About Us</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script>
+  /* ======= MENÚ ======= */
+  const menu = document.getElementById('menu');
+  document.getElementById('menu-btn').onclick = ()=> menu.classList.add('open');
+  document.getElementById('close-menu').onclick = ()=> menu.classList.remove('open');
+
+  const statsPanel = document.getElementById('stats-panel');
+  document.getElementById('open-stats').onclick = ()=>{
+    menu.classList.remove('open');
+    statsPanel.style.display='block';
+    fetch('assets/model_stats/Reportes de clasificacion.txt')
+      .then(r=>r.text()).then(t=>document.getElementById('report').textContent=t)
+      .catch(()=>document.getElementById('report').textContent='No se pudo cargar el reporte.');
+  };
+  document.getElementById('close-stats').onclick = ()=> statsPanel.style.display='none';
+
+  const formPopup = document.getElementById('form-popup');
+  const topPopup  = document.getElementById('top-popup');
+  const topEarthPopup  = document.getElementById('top-earth-popup');
+  document.getElementById('open-form').onclick = ()=>{
+    menu.classList.remove('open');
+    window.location.href = "prediccion.html";
+  };
+  ;
+  document.getElementById('open-top').onclick  = ()=>{ menu.classList.remove('open'); openPopup(topPopup); };
+  document.getElementById('open-top-earth').onclick  = ()=>{ menu.classList.remove('open'); openPopup(topEarthPopup); };
+
+  document.querySelectorAll('.popup .x').forEach(x=> x.addEventListener('click', (e)=>{
+    const sel = x.getAttribute('data-close'); if(sel) closePopup(document.querySelector(sel)); else closePopup(x.closest('.popup'));
+  }));
+  function openPopup(el){ el.classList.add('open'); }
+  function closePopup(el){ el.classList.remove('open'); }
+
+  /* ======= VISOR ======= */
+  const canvas = document.getElementById('universe');
+  const ctx = canvas.getContext('2d');
+  let W = innerWidth, H = innerHeight; canvas.width=W; canvas.height=H;
+
+  let points = [];
+  let scale = 1, offsetX = 0, offsetY = 0;
+  let dragging=false, lastX=0, lastY=0, target=null;
+
+  const minScale=1, maxScale=900, minTemp=200, maxTemp=8000;
+  const tooltip = document.getElementById('tooltip');
+  const searchBox = document.getElementById('search-box');
+  const zoomOutBtn = document.getElementById('zoom-out');
+
+  // Extensiones del mundo (para bloquear pan correctamente)
+  let worldMinX=0, worldMaxX=0, worldMinY=0, worldMaxY=0;
+
+  function map(v,a,b,c,d){ return c + (v-a)*(d-c)/(b-a); }
+  function finite(n){ return Number.isFinite(n); }
+  function safeFixed(v, k){ return finite(v) ? v.toFixed(k) : '—'; }
+  function safeLogSize(r){ const val = finite(r) ? r : 0; return Math.max(0.7, Math.log10(val+1)*1.4); }
+
+  fetch('exoplanetas_light.json')
+    .then(r=>r.json())
+    .then(data=>{
+      data = data.filter(d => d.RA!=null && d.DEC!=null && d.pl_radio!=null && d.pl_temperatura_eq!=null);
+      const RA  = data.map(d=>+d.RA), DEC = data.map(d=>+d.DEC);
+      const minRA = Math.min(...RA), maxRA = Math.max(...RA);
+      const minDEC= Math.min(...DEC), maxDEC= Math.max(...DEC);
+
+      // mundo geométrico (fijo relativo a W/H)
+      worldMinX = -W*0.45; worldMaxX =  W*0.45;
+      worldMinY = -H*0.45; worldMaxY =  H*0.45;
+
+      data.forEach(d=>{
+        const temp  = parseFloat(d.pl_temperatura_eq);
+        const radio = parseFloat(d.pl_radio);
+        const per   = (d.periodo_orbital!=null) ? parseFloat(d.periodo_orbital) : null;
+        const earth = (d.earth_similarity!=null) ? parseFloat(d.earth_similarity) : null;
+
+        // clamp temp en rango para color
+        const t = finite(temp) ? Math.min(Math.max(temp,minTemp),maxTemp) : minTemp;
+        const tNorm = (t-minTemp)/(maxTemp-minTemp);
+
+        const x = map(+d.RA,  minRA, maxRA, worldMinX, worldMaxX);
+        const y = map(+d.DEC, minDEC, maxDEC, worldMaxY, worldMinY);
+
+        points.push({
+          x, y,
+          id: d.object_id,
+          temp: finite(temp)?temp:null,
+          radio: finite(radio)?radio:null,
+          period: (per!=null && finite(per) && per>0)?per:null,
+          earth: (earth!=null && finite(earth))?earth:null,
+          tNorm
+        });
+      });
+
+      draw();
+      buildTop();
+      buildTopEarth();
+    });
+
+  function colorByTemp(p){
+    const c1=[0,255,255], c2=[255,0,255];
+    const r = Math.round(c1[0] + (c2[0]-c1[0])*p.tNorm);
+    const g = Math.round(c1[1] + (c2[1]-c1[1])*p.tNorm);
+    const b = Math.round(c1[2] + (c2[2]-c1[2])*p.tNorm);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.translate(W/2 + offsetX, H/2 + offsetY);
+    ctx.scale(scale, scale);
+
+    for(const p of points){
+      ctx.fillStyle = colorByTemp(p);
+      const size = safeLogSize(p.radio) / Math.sqrt(scale);
+      ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, Math.PI*2); ctx.fill();
+
+      if(target && p.id===target.id){
+        ctx.strokeStyle="#ffffff"; ctx.lineWidth=3/scale; ctx.shadowBlur=26; ctx.shadowColor="#ffffff";
+        ctx.beginPath(); ctx.arc(p.x,p.y,size*6,0,Math.PI*2); ctx.stroke(); ctx.shadowBlur=0;
+      }
+    }
+    ctx.restore();
+  }
+
+  // === límites de pan basados en mundo ===
+  function lockBounds(){
+    const minOX = -worldMaxX * scale;
+    const maxOX = -worldMinX * scale;
+    const minOY = -worldMaxY * scale;
+    const maxOY = -worldMinY * scale;
+
+    if(offsetX < minOX) offsetX = minOX;
+    if(offsetX > maxOX) offsetX = maxOX;
+    if(offsetY < minOY) offsetY = minOY;
+    if(offsetY > maxOY) offsetY = maxOY;
+  }
+
+  canvas.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    const zoomSpeed=1.22;
+    const mx=e.clientX - W/2 - offsetX;
+    const my=e.clientY - H/2 - offsetY;
+    const factor = e.deltaY < 0 ? zoomSpeed : 1/zoomSpeed;
+    const newScale = Math.min(maxScale, Math.max(minScale, scale*factor));
+    const scaleFactor = newScale/scale;
+    offsetX -= mx*(scaleFactor-1);
+    offsetY -= my*(scaleFactor-1);
+    scale = newScale;
+    lockBounds(); draw();
+  }, {passive:false});
+
+  canvas.addEventListener('mousedown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; });
+  canvas.addEventListener('mouseup',   ()=> dragging=false);
+  canvas.addEventListener('mouseleave',()=> dragging=false);
+  canvas.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    offsetX += (e.clientX - lastX);
+    offsetY += (e.clientY - lastY);
+    lastX = e.clientX; lastY = e.clientY;
+    lockBounds(); draw();
+  });
+
+  function showTooltipFor(p, x, y){
+    const temperature = safeFixed(p.temp,1);
+    const radius      = safeFixed(p.radio,2);
+    const earthSim    = finite(p.earth) ? p.earth : '—';
+    tooltip.innerHTML = `
+      <div class="tip-head">
+        <span>${p.id}</span>
+        <span class="tip-x" id="tip-close">×</span>
+      </div>
+      <div class="tip-body">
+        <div>Temperatura: <b>${temperature} K</b></div>
+        <div>Radio: <b>${radius}</b></div>
+        <div>Similitud Tierra: <b>${earthSim}</b></div>
+      </div>
+      <div class="tip-actions">
+        <button class="btn" id="btn3d">Ver en 3D</button>
+        <button class="btn" id="btnCenter">Centrar</button>
+      </div>
+    `;
+    tooltip.style.display='block';
+    tooltip.style.left = Math.min(x+16, W-340)+'px';
+    tooltip.style.top  = Math.min(y+16, H-180)+'px';
+
+    document.getElementById('tip-close').onclick = ()=> tooltip.style.display='none';
+    document.getElementById('btn3d').onclick = ()=>{ tooltip.style.display='none'; view3D(p); };
+    document.getElementById('btnCenter').onclick = ()=>{ tooltip.style.display='none'; smartZoomTo(p); };
+  }
+
+  canvas.addEventListener('click', e=>{
+    const mx=(e.clientX-W/2-offsetX)/scale;
+    const my=(e.clientY-H/2-offsetY)/scale;
+    let nearest=null, dist=Infinity;
+    for(const p of points){
+      const d = Math.hypot(p.x-mx, p.y-my);
+      if(d<dist && d < 10/scale){ nearest=p; dist=d; }
+    }
+    if(nearest){
+      target = nearest; draw();
+      showTooltipFor(nearest, e.clientX, e.clientY);
+    }
+  });
+
+  // === Zoom animado constante
+  function smartZoomTo(p){
+    const endScale = Math.min(maxScale, 260);
+    animateZoomTo(p, endScale, 34);
+  }
+  function animateZoomTo(p, endScale, steps=30){
+    const s0 = scale, x0 = offsetX, y0 = offsetY;
+    const sx = -p.x*endScale, sy = -p.y*endScale;
+    let f=0;
+    function easeInOut(t){ return t<.5 ? 2*t*t : -1+(4-2*t)*t; }
+    function step(){
+      f++;
+      const t = easeInOut(f/steps);
+      scale   = s0 + (endScale - s0)*t;
+      offsetX = x0 + (sx - x0)*t;
+      offsetY = y0 + (sy - y0)*t;
+      lockBounds(); draw();
+      if(f<steps) requestAnimationFrame(step);
+    }
+    step();
+  }
+
+  // Búsqueda
+  searchBox.addEventListener('keydown', (e)=>{
+    if(e.key!=='Enter') return;
+    const q = searchBox.value.trim();
+    if(!q) return;
+    const p = points.find(pt=> (pt.id||'').toLowerCase()===q.toLowerCase());
+    if(!p) return;
+    target = p;
+    smartZoomTo(p);
+    setTimeout(()=>{
+      showTooltipFor(p, Math.min(innerWidth*0.55, innerWidth-340), innerHeight*0.55);
+    }, 380);
+  });
+
+  // Zoom OUT animado
+  zoomOutBtn.onclick = ()=>{
+    let f=0, steps=26;
+    const s0=scale, x0=offsetX, y0=offsetY;
+    function ease(t){ return 1-Math.pow(1-t,3); }
+    function step(){
+      f++; const t=ease(f/steps);
+      scale = s0 + (1 - s0)*t;
+      offsetX = x0*(1-t);
+      offsetY = y0*(1-t);
+      lockBounds(); draw();
+      if(f<steps) requestAnimationFrame(step); else target=null;
+    }
+    step();
+  };
+
+  window.addEventListener('resize', ()=>{
+    W=innerWidth; H=innerHeight; canvas.width=W; canvas.height=H;
+    // recomputar extents del mundo con nuevo W/H (manteniendo 0.45 factor)
+    worldMinX = -W*0.45; worldMaxX =  W*0.45;
+    worldMinY = -H*0.45; worldMaxY =  H*0.45;
+    lockBounds(); draw();
+  });
+
+  // ===== Top por radio =====
+  function buildTop(){
+    const cont = document.getElementById('top-list');
+    cont.innerHTML='';
+    const top = [...points].sort((a,b)=> (b.radio||0)-(a.radio||0)).slice(0,10);
+    top.forEach(p=>{
+      const row = document.createElement('div');
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
+      row.style.gap='8px'; row.style.padding='8px 10px'; row.style.background='rgba(255,255,255,0.05)'; row.style.borderRadius='10px';
+      row.innerHTML = `
+        <span><b>${p.id}</b> — R: ${safeFixed(p.radio,2)}</span>
+        <span>
+          <button class="btn btn-mini" data-zoom="${p.id}" style="padding:6px 8px">Zoom</button>
+          <button class="btn btn-mini" data-3d="${p.id}" style="padding:6px 8px">3D</button>
+        </span>
+      `;
+      cont.appendChild(row);
+    });
+    cont.querySelectorAll('[data-zoom]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=b.getAttribute('data-zoom');
+        const p=points.find(pt=>pt.id===id); if(!p) return;
+        closePopup(topPopup); target=p; smartZoomTo(p);
+      })
+    });
+    cont.querySelectorAll('[data-3d]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=b.getAttribute('data-3d');
+        const p=points.find(pt=>pt.id===id); if(!p) return;
+        closePopup(topPopup); view3D(p);
+      })
+    });
+  }
+
+  // ===== Top por earth_similarity =====
+  function buildTopEarth(){
+    const cont = document.getElementById('top-earth-list');
+    cont.innerHTML='';
+    const top = [...points]
+      .filter(p=> finite(p.earth))
+      .sort((a,b)=> (b.earth||0)-(a.earth||0))
+      .slice(0,10);
+    top.forEach(p=>{
+      const row = document.createElement('div');
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
+      row.style.gap='8px'; row.style.padding='8px 10px'; row.style.background='rgba(255,255,255,0.05)'; row.style.borderRadius='10px';
+      const earthText = finite(p.earth) ? p.earth : '—';
+      row.innerHTML = `
+        <span><b>${p.id}</b> — Similitud Tierra: ${earthText}</span>
+        <span>
+          <button class="btn btn-mini" data-zoom="${p.id}" style="padding:6px 8px">Zoom</button>
+          <button class="btn btn-mini" data-3d="${p.id}" style="padding:6px 8px">3D</button>
+        </span>
+      `;
+      cont.appendChild(row);
+    });
+    cont.querySelectorAll('[data-zoom]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=b.getAttribute('data-zoom');
+        const p=points.find(pt=>pt.id===id); if(!p) return;
+        closePopup(topEarthPopup); target=p; smartZoomTo(p);
+      })
+    });
+    cont.querySelectorAll('[data-3d]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id=b.getAttribute('data-3d');
+        const p=points.find(pt=>pt.id===id); if(!p) return;
+        closePopup(topEarthPopup); view3D(p);
+      })
+    });
+  }
+
+  // ===== NASA per-id =====
+  function nasaOverviewURLFromID(id){
+    const koi = /^K0*([0-9]+)\.([0-9]+)$/i.exec(id);
+    if(koi){
+      const num = koi[1].replace(/^0+/,'')||'0';
+      const suf = koi[2];
+      return `https://exoplanetarchive.ipac.caltech.edu/overview/KOI-${num}.${suf}`;
+    }
+    if(/^EPIC[ _-]?\s*\d+/i.test(id)){
+      return `https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(id.replace(/_/g,' '))}`;
+    }
+    if(/^K2/i.test(id)){
+      return `https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(id)}`;
+    }
+    if(/^TOI[ _-]?\s*\d+/i.test(id)){
+      const norm = id.toUpperCase().replace(/TOI[ _-]?\s*/,'TOI-');
+      return `https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(norm)}`;
+    }
+    if(/^TIC[ _-]?\s*\d+/i.test(id)){
+      const norm = id.toUpperCase().replace(/_/g,' ');
+      return `https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(norm)}`;
+    }
+    return `https://exoplanetarchive.ipac.caltech.edu/cgi-bin/DisplayOverview/nph-DisplayOverview?objname=${encodeURIComponent(id)}&type=ALL`;
+  }
+
+  /* ======= 3D ======= */
+  const panel3D   = document.getElementById('planet3d');
+  const info3d    = document.getElementById('info3d');
+  const backBtn   = document.getElementById('back-btn');
+  const wrap3D    = document.getElementById('three-wrap');
+  const canvas3D  = document.getElementById('planetCanvas3D');
+
+  let renderer=null, scene=null, camera=null, sphere=null, animReq=null, lightA=null, lightB=null;
+
+  function downloadJSON(obj, filename){
+    const data = JSON.stringify(obj, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href=url; a.download=filename; document.body.appendChild(a);
+    a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+
+  function view3D(planet){
+    panel3D.style.display='block';
+
+    const periodText = finite(planet.period) ? `${planet.period.toFixed(2)} días` : '—';
+    const earthText  = finite(planet.earth) ? planet.earth : '—';
+    const nasaURL = nasaOverviewURLFromID(planet.id);
+    info3d.innerHTML = `
+      <h3>${planet.id}</h3>
+      <div class="row"><span>Temperatura</span><span><b>${safeFixed(planet.temp,1)} K</b></span></div>
+      <div class="row"><span>Radio</span><span><b>${safeFixed(planet.radio,2)}</b></span></div>
+      <div class="row"><span>Periodo orbital</span><span><b>${periodText}</b></span></div>
+      <div class="row"><span>Similitud Tierra</span><span><b>${earthText}</b></span></div>
+      <div class="actions">
+        <a class="btn" href="${nasaURL}" target="_blank" rel="noopener">Ver en NASA</a>
+        <button id="dl-json" class="btn">Descargar JSON</button>
+      </div>
+    `;
+    document.getElementById('dl-json').onclick = ()=> downloadJSON(planet, `${planet.id}.json`);
+
+    const w = wrap3D.clientWidth;
+    const h = wrap3D.clientHeight;
+
+    renderer = new THREE.WebGLRenderer({ canvas: canvas3D, antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(w, h, false);
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(54, w/h, 0.1, 1000);
+    camera.position.set(0, 0, 3.8);
+
+    const col = new THREE.Color(colorByTemp(planet));
+    const geo = new THREE.SphereGeometry(1.45, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.35, metalness: 0.0 });
+    sphere = new THREE.Mesh(geo, mat);
+    scene.add(sphere);
+
+    lightA = new THREE.PointLight(0xffd56a, 1.18, 0, 2);
+    lightA.position.set(2.2, 1.6, 2.2); scene.add(lightA);
+    lightB = new THREE.AmbientLight(0x404040, 0.7); scene.add(lightB);
+
+    const period = finite(planet.period) ? planet.period : 50;
+    const rotSpeed = 0.0035 * (50/period);
+
+    const animate = ()=>{
+      animReq = requestAnimationFrame(animate);
+      sphere.rotation.y += rotSpeed;
+      const t = performance.now()*0.0008;
+      lightA.position.x = 2.2 + Math.sin(t)*0.5;
+      lightA.position.z = 2.2 + Math.cos(t)*0.5;
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    const onResize3D = ()=>{
+      if(!renderer) return;
+      const w = wrap3D.clientWidth, h = wrap3D.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w/h;
+      camera.updateProjectionMatrix();
+    };
+    panel3D._onResize3D = onResize3D;
+    window.addEventListener('resize', onResize3D, {passive:true});
+  }
+
+  backBtn.addEventListener('click', ()=>{
+    if(animReq) cancelAnimationFrame(animReq);
+    animReq=null;
+    renderer && renderer.dispose();
+    renderer=null; scene=null; camera=null; sphere=null;
+    window.removeEventListener('resize', panel3D._onResize3D || (()=>{}));
+    panel3D.style.display='none';
+
+    let f=0, steps=24;
+    const s0=scale, x0=offsetX, y0=offsetY;
+    function step(){
+      f++; const t=f/steps;
+      scale = s0 + (1 - s0)*t;
+      offsetX = x0*(1-t);
+      offsetY = y0*(1-t);
+      lockBounds(); draw();
+      if(f<steps) requestAnimationFrame(step); else target=null;
+    }
+    step();
+  });
+  </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# 🌌 Astrolab-IA
+# 🌌 Astrolab-IA (EN)
 
 **Astrolab-IA** is an **AI-powered platform** that helps scientists and enthusiasts explore, classify, and prioritize exoplanets discovered by NASA missions.  
 By combining open datasets from **Kepler**, **K2**, and **TESS**, Astrolab-IA uses machine learning to automatically classify observed objects as **Confirmed Planets**, **Candidates**, or **False Positives**, while providing **explainable insights** into each prediction.
@@ -42,11 +42,11 @@ Built with **HTML, CSS, and JavaScript**, the web interface focuses on accessibi
 
 ### *Astrolab-IA — Team DataVerse*
 
-This project uses **open NASA data**. Artificial intelligence was used to generate the website and part of the code.
+This project uses **open NASA data**. Artificial intelligence was used to generate the website and part of the code. See a pitch of the project [here](https://tinyurl.com/2d3mfbtq). 
 
 ---------------------------------------------------------------------
 
-# 🌌 Astrolab-IA
+# 🌌 Astrolab-IA (ES)
 
 **Astrolab-IA** es una **plataforma impulsada por inteligencia artificial** que ayuda a científicos y entusiastas a explorar, clasificar y priorizar exoplanetas descubiertos por las misiones de la NASA.  
 Al combinar conjuntos de datos abiertos de **Kepler**, **K2** y **TESS**, Astrolab-IA utiliza aprendizaje automático para clasificar automáticamente los objetos observados como **Planetas Confirmados**, **Candidatos** o **Falsos Positivos**, proporcionando además **explicaciones interpretables** para cada predicción.
@@ -90,4 +90,4 @@ Construida con **HTML, CSS y JavaScript**, la interfaz web se centra en la acces
 
 ### *Astrolab-IA — Equipo DataVerse*
 
-Este proyecto utiliza **datos abiertos de la NASA**. Para generar la web y parte del código se ha empleado la inteligencia artificial.
+Este proyecto utiliza **datos abiertos de la NASA**. Para generar la web y parte del código se ha empleado la inteligencia artificial. Véase [aquí](https://tinyurl.com/2d3mfbtq) un *pitch* del proyecto.
