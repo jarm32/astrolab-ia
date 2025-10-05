@@ -125,8 +125,6 @@ Todos los conjuntos de datos fueron **limpiados, estandarizados y combinados** e
 - Explicabilidad mediante **valores SHAP** e **Importancia por Permutación**  
 - Una capa opcional de **Lógica Difusa** estima un *índice de habitabilidad* comparando las características planetarias con las condiciones de la Tierra
 
----
-
 ## Aplicación Web
 
 La plataforma web permite a los usuarios:
@@ -137,8 +135,6 @@ La plataforma web permite a los usuarios:
 - Acceder a **herramientas de explicabilidad** para comprender cada predicción  
 
 Construida con **HTML, CSS y JavaScript**, la interfaz web se centra en la accesibilidad y en una narrativa visual libre e intuitiva.
-
----
 
 ### *Astrolab-IA — Equipo DataVerse*
 
